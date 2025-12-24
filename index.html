@@ -280,8 +280,15 @@
                 padding: 10px;
             }
 
+            .calendar-container,
+            .calendar-grid {
+                width: 100% !important;
+                min-width: unset !important;
+            }
+
             .day {
-                min-height: 80px;
+                min-height: 60px;
+                /* 세로 출력 시에도 한 페이지에 들어오도록 조정 */
                 border: 1px solid #ddd;
                 padding: 4px;
             }
@@ -304,8 +311,8 @@
             }
 
             @page {
-                size: A4 landscape;
-                margin: 0.5cm;
+                size: A4;
+                margin: 1cm;
             }
         }
     </style>
