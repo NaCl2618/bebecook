@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>베베쿡 식단표 월력 변환기</title>
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #2d3436;
+            --border-color: #dfe6e9;
+            --sun-color: #e74c3c;
+            --sat-color: #3498db;
+        }
+
+        @font-face {
+            font-family: 'Pretendard';
+            src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+        }
+
+        @font-face {
+            font-family: 'Pretendard';
+            src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Bold.woff') format('woff');
+            font-weight: 700;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        header {
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .controls {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #636e72;
+        }
+
+        select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            min-width: 150px;
+        }
+
+        select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .calendar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-header {
+            padding: 20px;
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .weekday {
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            background: #f1f2f6;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .weekday:last-child {
+            border-right: none;
+        }
+
+        .weekday.sun {
+            color: var(--sun-color);
+        }
+
+        .weekday.sat {
+            color: var(--sat-color);
+        }
+
+        .day {
+            min-height: 120px;
+            padding: 8px;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day:nth-child(7n) {
+            border-right: none;
+        }
+
+        .day.other-month {
+            background: #fafafa;
+            color: #b2bec3;
+        }
+
+        .day-num {
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .day.sun .day-num {
+            color: var(--sun-color);
+        }
+
+        .day.sat .day-num {
+            color: var(--sat-color);
+        }
+
+        .meal-list {
+            list-style: none;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .meal-item {
+            font-size: 0.7rem;
+            padding: 2px 4px;
+            color: #555;
+            word-break: keep-all;
+            line-height: 1.3;
+        }
+
+        .message {
+            text-align: center;
+            padding: 20px;
+            color: #636e72;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-container {
+                overflow-x: auto;
+            }
+
+            .calendar-grid {
+                min-width: 900px;
+            }
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .controls,
+            header,
+            .message {
+                display: none !important;
+            }
+
+            .calendar-container {
+                box-shadow: none;
+                border: 1px solid #000;
+                border-radius: 0;
+                page-break-inside: avoid;
+            }
+
+            .calendar-header {
+                background: #fff !important;
+                color: #000 !important;
+                border-bottom: 2px solid #000;
+                font-size: 1rem;
+                padding: 10px;
+            }
+
+            .day {
+                min-height: 80px;
+                border: 1px solid #ddd;
+                padding: 4px;
+            }
+
+            .day-num {
+                font-size: 0.85rem;
+                margin-bottom: 4px;
+            }
+
+            .meal-item {
+                background: transparent;
+                font-size: 0.6rem;
+                padding: 1px 2px;
+                line-height: 1.2;
+            }
+
+            .weekday {
+                padding: 6px;
+                font-size: 0.85rem;
+            }
+
+            @page {
+                size: A4 landscape;
+                margin: 0.5cm;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>베베쿡 식단표</h1>
+        <p>카테고리와 월을 선택하면 자동으로 식단표가 표시됩니다.</p>
+    </header>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>대분류</label>
+            <select id="mainCategory" onchange="updateSubCategories()">
+                <option value="baby">이유식</option>
+                <option value="kids">키즈식</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>세부 단계</label>
+            <select id="subCategory" onchange="fetchAndRender()">
+                <!-- fS에서 채워짐 -->
+            </select>
+        </div>
+        <div class="control-group">
+            <label>연도</label>
+            <select id="yearSelect" onchange="fetchAndRender()"></select>
+        </div>
+        <div class="control-group">
+            <label>월</label>
+            <select id="monthSelect" onchange="fetchAndRender()"></select>
+        </div>
+        <button class="btn" style="background-color: #636e72;" onclick="window.print()">인쇄하기</button>
+    </div>
+
+    <div class="calendar-container">
+        <div class="calendar-header" id="calendarTitle">2025년 12월 식단표</div>
+        <div class="calendar-grid" id="calendarGrid">
+            <div class="weekday sun">일</div>
+            <div class="weekday">월</div>
+            <div class="weekday">화</div>
+            <div class="weekday">수</div>
+            <div class="weekday">목</div>
+            <div class="weekday">금</div>
+            <div class="weekday sat">토</div>
+            <!-- 날짜 데이터 삽입 영역 -->
+        </div>
+    </div>
+
+    <div id="statusMessage" class="message">조건을 선택하고 버튼을 누르세요.</div>
+
+    <script>
+        /**
+         * 전역 변수: 로드된 식단 데이터
+         */
+        let allDietData = null;
+        let categoryData = { baby: [], kids: [] };
+
+        /**
+         * 데이터 로드 및 카테고리 초기화
+         */
+        async function loadDataAndInit() {
+            try {
+                // 데이터 로드 (캐시 우회)
+                const timestamp = new Date().getTime();
+                const response = await fetch(`data/diet_data.json?t=${timestamp}`);
+                if (!response.ok) throw new Error('데이터 파일을 찾을 수 없습니다.');
+
+                allDietData = await response.json();
+
+                // 카테고리 데이터 동적 생성
+                categoryData = { baby: [], kids: [] };
+
+                // 이유식 카테고리: ID가 1-9 또는 20-99 범위의 작은 숫자들
+                // 키즈식 카테곣: ID가 10 이상이거나 특정 패턴
+                for (const [id, data] of Object.entries(allDietData)) {
+                    const numId = parseInt(id);
+                    const name = data.name;
+
+                    // 이름에 특정 키워드가 있으면 분류
+                    if (name.includes('M)') || name.includes('초기') || name.includes('중기') ||
+                        name.includes('후기') || name.includes('완료기') || name.includes('오트이유식') ||
+                        name.includes('페이스트') || name.includes('파테') || name.includes('죽')) {
+                        categoryData.baby.push({ id, name });
+                    } else {
+                        categoryData.kids.push({ id, name });
+                    }
+                }
+
+                // 이름 순서로 정렬
+                categoryData.baby.sort((a, b) => a.name.localeCompare(b.name));
+                categoryData.kids.sort((a, b) => a.name.localeCompare(b.name));
+
+                // UI 초기화
+                init();
+
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+                alert('데이터를 불러올 수 없습니다. 페이지를 새로고침해 주세요.');
+            }
+        }
+
+        /**
+         * 초기화
+         */
+        function init() {
+            const ySelect = document.getElementById('yearSelect');
+            const mSelect = document.getElementById('monthSelect');
+            const now = new Date();
+            const currYear = now.getFullYear();
+            const currMonth = now.getMonth();
+
+            for (let i = currYear - 1; i <= currYear + 1; i++) {
+                const opt = document.createElement('option');
+                opt.value = i; opt.textContent = i + '년';
+                if (i === currYear) opt.selected = true;
+                ySelect.appendChild(opt);
+            }
+
+            for (let i = 1; i <= 12; i++) {
+                const opt = document.createElement('option');
+                opt.value = i; opt.textContent = i + '월';
+                if (i === currMonth + 1) opt.selected = true;
+                mSelect.appendChild(opt);
+            }
+
+            updateSubCategories();
+        }
+
+        /**
+         * 대분류 변경 시 소분류 드롭다운 업데이트
+         */
+        function updateSubCategories() {
+            const main = document.getElementById('mainCategory').value;
+            const sub = document.getElementById('subCategory');
+            sub.innerHTML = '';
+            categoryData[main].forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.name;
+                sub.appendChild(opt);
+            });
+            // 카테고리 변경 시 자동으로 데이터 로드
+            fetchAndRender();
+        }
+
+
+        /**
+         * 베베쿡 식단표 데이터 로드 (이미 로드된 데이터 사용)
+         */
+        async function fetchAndRender() {
+            const stepSeq = document.getElementById('subCategory').value;
+            const year = parseInt(document.getElementById('yearSelect').value);
+            const month = parseInt(document.getElementById('monthSelect').value);
+
+            const msg = document.getElementById('statusMessage');
+            msg.textContent = '데이터를 불러오는 중입니다...';
+
+            try {
+                // allDietData에서 직접 데이터 추출
+                if (!allDietData || !allDietData[stepSeq]) {
+                    throw new Error('해당 카테고리 데이터가 없습니다.');
+                }
+
+                const categoryData = allDietData[stepSeq];
+
+                const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+                const menuList = categoryData.monthly[monthKey];
+
+                if (!menuList) {
+                    throw new Error(`${year}년 ${month}월 데이터가 아직 수집되지 않았습니다.`);
+                }
+
+                // 기존 renderCalendar 함수와 호환되도록 데이터 변환
+                renderCalendar(menuList, year, month - 1);
+                msg.textContent = `${year}년 ${month}월 식단표`;
+
+            } catch (error) {
+                console.error(error);
+                msg.textContent = `데이터 로드 실패: ${error.message}`;
+            }
+        }
+
+        /**
+         * 달력 렌더링
+         * @param {Array} apiData 식단 데이터 (예: [{menuNm: "...", day: "22", ...}])
+         * @param {Number} year 연도
+         * @param {Number} month 월 (0~11)
+         */
+        function renderCalendar(apiData, year, month) {
+            const grid = document.getElementById('calendarGrid');
+            const title = document.getElementById('calendarTitle');
+            const subName = document.getElementById('subCategory').options[document.getElementById('subCategory').selectedIndex].text;
+
+            title.textContent = `${year}년 ${month + 1}월 [${subName}] 식단표`;
+
+            // 요일 헤더 유지
+            const headers = Array.from(grid.querySelectorAll('.weekday'));
+            grid.innerHTML = '';
+            headers.forEach(h => grid.appendChild(h));
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const prevLastDate = new Date(year, month, 0).getDate();
+
+            // 데이터 날짜별 그룹화 (크롤링된 데이터 구조에 맞춰 처리)
+            const mealMap = {};
+            const menuList = apiData.menuList || apiData; // array 형태거나 menuList 속성에 담겨있을 수 있음
+
+            if (Array.isArray(menuList)) {
+                menuList.forEach(item => {
+                    let d;
+                    // day가 "2025-12-01" 형식인 경우 (크롤링 데이터)
+                    if (typeof item.day === 'string' && item.day.includes('-')) {
+                        const dateParts = item.day.split('-');
+                        d = parseInt(dateParts[2]); // 일(day) 부분만 추출
+                    } else {
+                        // day가 숫자 또는 "01" 형태인 경우
+                        d = parseInt(item.day);
+                    }
+
+                    if (!isNaN(d) && item.menuNm) { // menuNm이 비어있지 않은 경우만 추가
+                        if (!mealMap[d]) mealMap[d] = [];
+                        mealMap[d].push(item.menuNm);
+                    }
+                });
+            } else if (typeof apiData === 'object') {
+                // 또 다른 가능성: 날짜가 키인 객체 형태 등 (필요 시 확장)
+            }
+
+            // 이전 달 날짜
+            for (let i = firstDay; i > 0; i--) {
+                const div = document.createElement('div');
+                div.className = 'day other-month';
+                div.innerHTML = `<span class="day-num">${prevLastDate - i + 1}</span>`;
+                grid.appendChild(div);
+            }
+
+            // 이번 달 날짜
+            for (let i = 1; i <= lastDate; i++) {
+                const div = document.createElement('div');
+                const dObj = new Date(year, month, i);
+                const sun = dObj.getDay() === 0;
+                const sat = dObj.getDay() === 6;
+                div.className = `day ${sun ? 'sun' : ''} ${sat ? 'sat' : ''}`;
+
+                let html = `<span class="day-num">${i}</span>`;
+                if (mealMap[i]) {
+                    html += `<ul class="meal-list">`;
+                    mealMap[i].forEach(menu => {
+                        html += `<li class="meal-item">${menu}</li>`;
+                    });
+                    html += `</ul>`;
+                }
+                div.innerHTML = html;
+                grid.appendChild(div);
+            }
+
+            // 그리드 채우기 (6주 기준 42칸)
+            while (grid.children.length < 42 + 7) {
+                const nextDay = grid.children.length - (firstDay + lastDate + 7) + 1;
+                const div = document.createElement('div');
+                div.className = 'day other-month';
+                div.innerHTML = `<span class="day-num">${nextDay}</span>`;
+                grid.appendChild(div);
+            }
+        }
+
+        window.onload = function () {
+            loadDataAndInit();
+        };
+    </script>
+</body>
+
+</html>
