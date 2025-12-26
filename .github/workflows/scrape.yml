@@ -2,7 +2,7 @@ name: Scrape Bebecook Schedule
 
 on:
   schedule:
-    - cron: '0 18 * * *' # 매일 한국 시간 새벽 3시 실행
+    - cron: '0 18 * * 7' # 매주 일요일 한국 시간 새벽 3시 실행
   workflow_dispatch: # 수동 실행 버튼 활성화
 
 jobs:
