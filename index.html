@@ -561,15 +561,25 @@
                 const sat = dObj.getDay() === 6;
                 div.className = `day ${sun ? 'sun' : ''} ${sat ? 'sat' : ''}`;
 
-                let html = `<span class="day-num">${i}</span>`;
+                const dayNum = document.createElement('span');
+                dayNum.className = 'day-num';
+                dayNum.textContent = i;
+                div.appendChild(dayNum);
+
                 if (mealMap[i]) {
-                    html += `<ul class="meal-list">`;
+                    const mealList = document.createElement('ul');
+                    mealList.className = 'meal-list';
+
                     mealMap[i].forEach(menu => {
-                        html += `<li class="meal-item">${menu}</li>`;
+                        const mealItem = document.createElement('li');
+                        mealItem.className = 'meal-item';
+                        mealItem.textContent = menu;
+                        mealList.appendChild(mealItem);
                     });
-                    html += `</ul>`;
+
+                    div.appendChild(mealList);
                 }
-                div.innerHTML = html;
+
                 grid.appendChild(div);
             }
 
